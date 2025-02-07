@@ -1,5 +1,4 @@
-Introduction to ray tracing with on OpenGL with Compute Shaders
-
+Introduction to ray tracing with OpenGL with Compute Shaders
 
 # Instructions
 - To build (outputs to `/build` directory):
