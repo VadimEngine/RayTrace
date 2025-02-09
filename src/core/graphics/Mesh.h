@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -8,11 +7,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Shader.h"
+#include "ShaderProgram.h"
 
 #include <string>
 #include <vector>
-using namespace std;
 
 #define MAX_BONE_INFLUENCE 4
 
@@ -33,23 +31,23 @@ struct Vertex {
 	float m_Weights[MAX_BONE_INFLUENCE];
 };
 
-struct Texture {
-    unsigned int id;
-    string type;
-    string path;
-};
-
 class Mesh {
 public:
+
+    struct Texture {
+        unsigned int id;
+        std::string type;
+        std::string path;
+    };
+
     // mesh Data
-    vector<Vertex>       vertices;
-    vector<unsigned int> indices;
-    vector<Texture>      textures;
+    std::vector<Vertex>       vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Mesh::Texture>      textures;
     unsigned int VAO;
 
     // constructor
-    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
-    {
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Mesh::Texture> textures) {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
@@ -59,8 +57,7 @@ public:
     }
 
     // render the mesh
-    void Draw(Shader &shader) 
-    {
+    void Draw(ShaderProgram &shader) {
         // bind appropriate textures
         unsigned int diffuseNr  = 1;
         unsigned int specularNr = 1;
@@ -70,8 +67,8 @@ public:
         {
             glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
             // retrieve texture number (the N in diffuse_textureN)
-            string number;
-            string name = textures[i].type;
+            std::string number;
+            std::string name = textures[i].type;
             if(name == "texture_diffuse")
                 number = std::to_string(diffuseNr++);
             else if(name == "texture_specular")
@@ -82,7 +79,7 @@ public:
                 number = std::to_string(heightNr++); // transfer unsigned int to string
 
             // now set the sampler to the correct texture unit
-            glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+            glUniform1i(glGetUniformLocation(shader.getProgramId(), (name + number).c_str()), i);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
@@ -101,8 +98,7 @@ private:
     unsigned int VBO, EBO;
 
     // initializes all the buffer objects/arrays
-    void setupMesh()
-    {
+    void setupMesh() {
         // create buffers/arrays
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
@@ -145,4 +141,3 @@ private:
         glBindVertexArray(0);
     }
 };
-#endif

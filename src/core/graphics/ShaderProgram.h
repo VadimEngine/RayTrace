@@ -1,6 +1,8 @@
 #pragma once
+// standard lib
 #include <cstdint>
 #include <string>
+// third party
 #include <glm/glm.hpp>
 
 class ShaderProgram {

@@ -1,13 +1,14 @@
-Introduction to ray tracing with OpenGL with Compute Shaders
+Introduction to ray tracing with OpenGL with Compute Shaders. Use tab key to swap scenes
 
 # Instructions
 
 Third party libraries must be added a ./thirdparty folder (or update theCMake)
 - assimp
 - glew-cmake
-- glfw
+- glfw (Currently using 3.3.8 to allow enabling vysnc with glfwSwapInterval(1))
 - glm
 - stb
+- imgui
 
 ## Build commands
 

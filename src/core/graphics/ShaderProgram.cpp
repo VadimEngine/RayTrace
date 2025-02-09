@@ -1,10 +1,12 @@
+// standard lib
+#include <stdexcept>
+// third party
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <glm/glm.hpp>
 // program
-#include "ShaderProgram.h"
-#include <stdexcept>
+#include "core/graphics/ShaderProgram.h"
 
 
 ShaderProgram::ShaderProgram() {
