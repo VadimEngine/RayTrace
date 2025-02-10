@@ -2,7 +2,7 @@ Introduction to ray tracing with OpenGL with Compute Shaders. Use tab key to swa
 
 # Instructions
 
-Third party libraries must be added a ./thirdparty folder (or update theCMake)
+Third party libraries must be added a ./thirdparty folder (or update the CMake to point to these third party libs)
 - assimp
 - glew-cmake
 - glfw (Currently using 3.3.8 to allow enabling vysnc with glfwSwapInterval(1))

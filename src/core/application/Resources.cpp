@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 // third party
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 // project
 #include "core/application/Resources.h"

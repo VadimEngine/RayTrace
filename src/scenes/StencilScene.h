@@ -9,11 +9,23 @@
 
 class StencilScene : public Scene {
 public:
-    StencilScene(Resources& resources, Camera& camera);
+    StencilScene(App& parentApp);
 
     void render() override;
 
     void renderUI() override;
+
+    void update(const float dt) override;
+
+    void onKeyPress(unsigned int code) override;
+
+    void onKeyRelease(unsigned int code) override;
+
+    void onMousePress(const MouseEvent& mouseEvent) override;
+
+    void onMouseRelease(const MouseEvent& mouseEvent) override;
+
+    void onMouseWheel(const MouseEvent& mouseEvent) override;
 
 private:
     ShaderProgram* mpStencilShader_ = nullptr;
@@ -25,7 +37,7 @@ private:
     Texture* mpCubeTexture = nullptr;
 
 
-    Camera& camera;
+    Camera mCamera_;
 
     unsigned int planeVAO, planeVBO;
 

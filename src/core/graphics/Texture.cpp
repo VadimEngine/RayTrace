@@ -53,6 +53,5 @@ unsigned int Texture::genGLTexture(const unsigned char* textureData, int width, 
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // stbi_image_free(data);
     return textureId;
 }

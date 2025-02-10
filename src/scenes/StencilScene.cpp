@@ -6,19 +6,21 @@
 #include <imgui_impl_opengl3.h>
 // project
 #include "StencilScene.h"
+#include "core/application/App.h"
+
 
 namespace {
     static const unsigned int SCR_WIDTH = 800;
-    static const unsigned int SCR_HEIGHT = 600;
+    static const unsigned int SCR_HEIGHT = 800;
 }
 
-StencilScene::StencilScene(Resources& resources, Camera& camera)
-: camera(camera) {
-    mpStencilShader_ = resources.getResource<ShaderProgram>("StencilShader");
-    mpStencilShaderSingleColor_ = resources.getResource<ShaderProgram>("StencilShaderSingleColor");
+StencilScene::StencilScene(App& parentApp)
+: Scene(parentApp) {
+    mpStencilShader_ = mParentApp_.getResources().getResource<ShaderProgram>("StencilShader");
+    mpStencilShaderSingleColor_ = mParentApp_.getResources().getResource<ShaderProgram>("StencilShaderSingleColor");
 
-    mpCubeTexture = resources.getResource<Texture>("Cube");
-    mpFloorTexture = resources.getResource<Texture>("Floor");
+    mpCubeTexture = mParentApp_.getResources().getResource<Texture>("Cube");
+    mpFloorTexture = mParentApp_.getResources().getResource<Texture>("Floor");
 
     float cubeVertices[] = {
         // positions          // texture Coords
@@ -98,8 +100,8 @@ StencilScene::StencilScene(Resources& resources, Camera& camera)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
 
-    resources.getResource<ShaderProgram>("StencilShader")->bind();
-    resources.getResource<ShaderProgram>("StencilShader")->setInt("texture1", 0);
+    mpStencilShader_->bind();
+    mpStencilShader_->setInt("texture1", 0);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -123,8 +125,8 @@ void StencilScene::render() {
     // set uniforms
     mpStencilShaderSingleColor_->bind();
     glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = mCamera_.getViewMatrix();
+    glm::mat4 projection = mCamera_.getProjectionMatrix();
     mpStencilShaderSingleColor_->setMat4("view", view);
     mpStencilShaderSingleColor_->setMat4("projection", projection);
 
@@ -198,9 +200,78 @@ void StencilScene::renderUI() {
         ImGui::Text("Stencil Scene");
         ImGui::Text("FPS: %.1f", double(ImGui::GetIO().Framerate));
 
+        const auto cameraPos = mCamera_.getPosition();
+        const auto cameraForward = mCamera_.getForward();
+        const auto cameraRotation = mCamera_.getOrientation();
+
+        ImGui::Text("Camera Position: %.1f %.1f %.1f", cameraPos.x, cameraPos.y, cameraPos.z);
+        ImGui::Text("Camera Forward: %.1f %.1f %.1f", cameraForward.x, cameraForward.y, cameraForward.z);
+        ImGui::Text("Camera Orientation (quat): %.3f %.3f %.3f %.3f", 
+            cameraRotation.x, cameraRotation.y, cameraRotation.z, cameraRotation.w
+        );
+
         ImGui::End();
     }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // TODO check platform
 }
+
+void StencilScene::update(const float dt) {
+    const InputHandler& inputHandler = *(mParentApp_.getWindow()->getInputHandler());
+
+   if (inputHandler.isKeyPressed(GLFW_KEY_W)) {
+       mCamera_.move(mCamera_.getForward(), mCamera_.getMoveSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_S)) {
+       mCamera_.move(mCamera_.getForward(), -mCamera_.getMoveSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_A)) {
+       mCamera_.move(mCamera_.getRight(), -mCamera_.getMoveSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_D)) {
+       mCamera_.move(mCamera_.getRight(), mCamera_.getMoveSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_SPACE)) {
+       mCamera_.move({0,1,0}, mCamera_.getMoveSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
+       mCamera_.move({0,1,0}, -mCamera_.getMoveSpeed() * dt);
+   }
+
+   if (inputHandler.isKeyPressed(GLFW_KEY_LEFT)) {
+       mCamera_.rotate(mCamera_.getUp(), mCamera_.getRotationSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_RIGHT)) {
+       mCamera_.rotate(mCamera_.getUp(), -mCamera_.getRotationSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_UP)) {
+       mCamera_.rotate(mCamera_.getRight(), mCamera_.getRotationSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_DOWN)) {
+       mCamera_.rotate(mCamera_.getRight(), -mCamera_.getRotationSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_Q)) {
+       mCamera_.rotate(mCamera_.getForward(), 200.0f * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_E)) {
+       mCamera_.rotate(mCamera_.getForward(), -200.0f * dt);
+   }
+   // Speed
+   if (inputHandler.isKeyPressed(GLFW_KEY_PERIOD)) {
+       mCamera_.zoom(-mCamera_.getZoomSpeed() * dt);
+   }
+   if (inputHandler.isKeyPressed(GLFW_KEY_COMMA)) {
+       mCamera_.zoom(mCamera_.getZoomSpeed() * dt);
+   }
+}
+
+void StencilScene::onKeyPress(unsigned int code) {}
+
+void StencilScene::onKeyRelease(unsigned int code) {}
+
+void StencilScene::onMousePress(const MouseEvent& mouseEvent) {}
+
+void StencilScene::onMouseRelease(const MouseEvent& mouseEvent) {}
+
+void StencilScene::onMouseWheel(const MouseEvent& mouseEvent) {}

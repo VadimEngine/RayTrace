@@ -1,130 +1,167 @@
-#ifndef CAMERA_H
-#define CAMERA_H
-
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GL/gl.h>
+#pragma once
+// third party
+#include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
-// Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum Camera_Movement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT
-};
-
-// Default camera values
-const float YAW         = -90.0f;
-const float PITCH       =  0.0f;
-const float SPEED       =  2.5f;
-const float SENSITIVITY =  0.1f;
-const float ZOOM        =  45.0f;
-
-
-// An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
-class Camera
-{
+class Camera {
 public:
-    // camera Attributes
-    glm::vec3 Position;
-    glm::vec3 Front;
-    glm::vec3 Up;
-    glm::vec3 Right;
-    glm::vec3 WorldUp;
-    // euler Angles
-    float Yaw;
-    float Pitch;
-    // camera options
-    float MovementSpeed;
-    float MouseSensitivity;
-    float Zoom;
+    /** Camera mode options */
+    enum class CameraMode {PERSPECTIVE=0, ORTHOGONAL};
 
-    // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
-    {
-        Position = position;
-        WorldUp = up;
-        Yaw = yaw;
-        Pitch = pitch;
-        updateCameraVectors();
-    }
-    // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
-    {
-        Position = glm::vec3(posX, posY, posZ);
-        WorldUp = glm::vec3(upX, upY, upZ);
-        Yaw = yaw;
-        Pitch = pitch;
-        updateCameraVectors();
-    }
+public:
+    /** Constructor */
+    Camera(const glm::vec3& position = {0,0,0});
 
-    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
-    {
-        return glm::lookAt(Position, Position + Front, Up);
-    }
+    /** Destructor */
+    ~Camera();
 
-    // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
-    {
-        float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD)
-            Position += Front * velocity;
-        if (direction == BACKWARD)
-            Position -= Front * velocity;
-        if (direction == LEFT)
-            Position -= Right * velocity;
-        if (direction == RIGHT)
-            Position += Right * velocity;
-    }
+    /**
+     * Update Camera
+     * @param dt Time since last update in seconds
+     */
+    void update(float dt);
 
-    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
-    {
-        xoffset *= MouseSensitivity;
-        yoffset *= MouseSensitivity;
+    /**
+     * Move the camera from current postion in the given direction and step
+     * @param dir Direction to move
+     * @param step Amount to move
+     */
+    void move(const glm::vec3& dir, const float step);
 
-        Yaw   += xoffset;
-        Pitch += yoffset;
+    /**
+     * Rotate the camera from current rotation in the given axis and step
+     * @param axis Axis to rotate around
+     * @param angle Amount to rotate
+     */
+    void rotate(const glm::vec3& axis, const float angle);
 
-        // make sure that when pitch is out of bounds, screen doesn't get flipped
-        if (constrainPitch)
-        {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            if (Pitch < -89.0f)
-                Pitch = -89.0f;
-        }
+    /**
+     * Set the Camera FOV
+     * @param newFOV New FOV in degrees
+     */
+    void setFOV(const float newFOV);
 
-        // update Front, Right and Up Vectors using the updated Euler angles
-        updateCameraVectors();
-    }
+    /**
+     * Set the Camera Aspect Ratio
+     * @param newAspect New Camera Aspect ratio
+     */
+    void setAspectRatio(float newAspect);
 
-    // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-    void ProcessMouseScroll(float yoffset)
-    {
-        Zoom -= (float)yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
-    }
+    /**
+     * Set the Camera Position
+     * @param newPosition New Position vector
+    */
+    void setPosition(const glm::vec3& newPosition);
+
+    /**
+     * Set the Rotation vector
+     * @param newRotation New Rotation vector in radians
+     */
+    void setOrientation(const glm::quat& newRotation);
+
+    /**
+     * Adjust the FOV with the given amount
+     * @param zoomAdjust FOV adjustment amount in degrees
+     */
+    void zoom(const float zoomAdjust);
+
+    /**
+     * Set the Camera mode (Perspective/Orthogonal )
+     * @param mode New Camera mode
+     */
+    void setMode(const CameraMode mode);
+
+    /** Get the Projection matrix for this camera (Depends on Camera mode) */
+    glm::mat4 getProjectionMatrix() const;
+
+    /** Get the view matrix which is based on the Camera position and direction */
+    glm::mat4 getViewMatrix() const;
+
+    /** Get camera rotations */
+    glm::quat getOrientation() const;
+
+    /** Get camera position */
+    glm::vec3 getPosition() const;
+
+    /** Get camera forward direction */
+    glm::vec3 getForward() const;
+
+    /** Get the Camera's Right vector */
+    glm::vec3 getRight() const;
+
+    /** Get the Camera's Up vector */
+    glm::vec3 getUp() const;
+
+    /** Get the Camera FOV in degrees */
+    float getFOV() const;
+
+    /** Get the Camera aspect ratio */
+    float getAspectRatio() const;
+
+    /** Get the Cameras mode */
+    CameraMode getMode() const;
+
+    /**
+     * Set the camera movement speed
+     * @param newSpeed move speed
+     */
+    void setMoveSpeed(float newSpeed);
+
+    /**
+     * Set the camera rotation speed
+     * @param newSpeed rotation speed
+     */
+    void setRotationSpeed(float newSpeed);
+
+    /**
+     * Set the camera zoom speed
+     * @param newSpeed zoom speed
+     */
+    void setZoomSpeed(float newSpeed);
+
+    /**
+     * Get the Camera movement speed
+     */
+    float getMoveSpeed() const;
+
+    /**
+     * Get the Camera rotation speed
+     */
+    float getRotationSpeed() const;
+
+    /**
+     * Get the Camera zoom speed
+     */
+    float getZoomSpeed() const;
 
 private:
-    // calculates the front vector from the Camera's (updated) Euler Angles
-    void updateCameraVectors()
-    {
-        // calculate the new Front vector
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = glm::normalize(front);
-        // also re-calculate the Right and Up vector
-        Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-        Up    = glm::normalize(glm::cross(Right, Front));
-    }
+    /** Update the forward, Right and Up vector based on the camera's rotation*/
+    void updateCameraVectors();
+
+    float mNear_ = 0.05f;
+    float mFar_ = 100.0f;
+    glm::quat mOrientation_;
+
+    /** Camera Position */
+    glm::vec3 mPosition_;
+    /** Camera forward vector */
+    glm::vec3 mForward_;
+    /** Camera up vector */
+    glm::vec3 mUp_;
+    /** Camera right vector */
+    glm::vec3 mRight_;
+    /** Camera FOV-Y in degrees */
+    float mFOV_ = 45.0f;
+    /** Aspect ratio for perspective matrix */
+    float mAspectRatio_ = 1.f;
+    /** The camera's mode */
+    CameraMode mMode_ = CameraMode::PERSPECTIVE;
+    /** Speed the camera moves */
+    float mMoveSpeed_ = 10.f;
+    /** Speed the camera rotates */
+    float mRotationSpeed_ = 40.f;
+    /** Speed the camera Zooms (adjust the FOV) */
+    float mZoomSpeed_ = 2.f;
 };
-#endif

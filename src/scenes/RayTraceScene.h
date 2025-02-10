@@ -8,11 +8,23 @@
 
 class RayTraceScene : public Scene {
 public:
-    RayTraceScene(Resources& resources, Camera& camera);
+    RayTraceScene(App& parentAppa);
 
     void render() override;
 
     void renderUI() override;
+
+    void update(const float dt) override;
+
+    void onKeyPress(unsigned int code) override;
+
+    void onKeyRelease(unsigned int code) override;
+
+    void onMousePress(const MouseEvent& mouseEvent) override;
+
+    void onMouseRelease(const MouseEvent& mouseEvent) override;
+
+    void onMouseWheel(const MouseEvent& mouseEvent) override;
 
 private:
 
@@ -29,6 +41,6 @@ private:
     const int dataSize = 1024; // Array of 1024 integers
     std::vector<int> data;
 
-    Camera& camera;
+    Camera mCamera_;
 
 };
