@@ -43,4 +43,6 @@ private:
 
     Camera mCamera_;
 
+    const glm::vec2 mScreenSize_;
+
 };

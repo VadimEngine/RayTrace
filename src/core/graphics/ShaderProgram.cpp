@@ -14,7 +14,7 @@ ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-    // todo delete
+    glDeleteShader(mProgramId_);
 }
 
 void ShaderProgram::addShader(const ShaderCreateInfo& shaderInfo) {
@@ -51,9 +51,7 @@ void ShaderProgram::addShader(const ShaderCreateInfo& shaderInfo) {
 }
 
 void ShaderProgram::linkProgram() {
-    // todo call     glDeleteShader(shader);
     glLinkProgram(mProgramId_);
-
 }
 
 void ShaderProgram::bind() const {

@@ -46,9 +46,9 @@ ImageData fileDataToImageData(const FileData& imageFile) {
 }
 
 template<typename T>
-void Resources::loadResource(const std::vector<ResourceInfo>& resourceInfo, const std::string& resourceName) {
+void Resources::loadResource(const std::vector<std::string>& resourceInfo, const std::string& resourceName) {
     if constexpr(std::is_same_v<T, Texture>) {
-        FileData fileData = loadFileToMemory(resourceInfo[0].path);
+        FileData fileData = loadFileToMemory(resourceInfo[0]);
         ImageData imageData = fileDataToImageData(fileData);
         auto texture = std::make_unique<Texture>(imageData);
         mTextures_[resourceName] = std::move(texture);
@@ -56,9 +56,32 @@ void Resources::loadResource(const std::vector<ResourceInfo>& resourceInfo, cons
         auto shaderProgram = std::make_unique<ShaderProgram>();
 
         for (const auto& eachPath: resourceInfo) {
-            FileData fileData = loadFileToMemory(eachPath.path);
+            const size_t lastColon =  eachPath.find_last_of(':');
+            const std::string shaderPath = eachPath.substr(0, lastColon);
+            const std::string shaderType = eachPath.substr(lastColon + 1);
+
+            FileData fileData = loadFileToMemory(shaderPath);
+
+            ShaderProgram::ShaderCreateInfo::Type shaderTypeEnum;
+
+            if (shaderType == "VERTEX") {
+                shaderTypeEnum = ShaderProgram::ShaderCreateInfo::Type::VERTEX;
+            } else if (shaderType == "TESSELLATION_CONTROL") {
+                shaderTypeEnum = ShaderProgram::ShaderCreateInfo::Type::TESSELLATION_CONTROL;
+            } else if (shaderType == "TESSELLATION_EVALUATION") {
+                shaderTypeEnum = ShaderProgram::ShaderCreateInfo::Type::TESSELLATION_EVALUATION;
+            } else if (shaderType == "GEOMETRY") {
+                shaderTypeEnum = ShaderProgram::ShaderCreateInfo::Type::GEOMETRY;
+            } else if (shaderType == "FRAGMENT") {
+                shaderTypeEnum = ShaderProgram::ShaderCreateInfo::Type::FRAGMENT;
+            } else if (shaderType == "COMPUTE") {
+                shaderTypeEnum = ShaderProgram::ShaderCreateInfo::Type::COMPUTE;
+            } else {
+                throw std::runtime_error("Invalid shader path suffix");
+            }
+
             shaderProgram->addShader({
-                eachPath.shaderType.value(),
+                shaderTypeEnum,
                 std::string(reinterpret_cast<char*>(fileData.data.get()), fileData.size).c_str(),
                 fileData.size
             });
@@ -88,8 +111,8 @@ T* Resources::getResource(const std::string& resourceName) {
 }
 
 // Explicit instantiate template for expected types
-template void Resources::loadResource<Texture>(const std::vector<ResourceInfo>& resourceInfo, const std::string& resourceName);
-template void Resources::loadResource<ShaderProgram>(const std::vector<ResourceInfo>& resourceInfo, const std::string& resourceName);
+template void Resources::loadResource<Texture>(const std::vector<std::string>& resourceInfo, const std::string& resourceName);
+template void Resources::loadResource<ShaderProgram>(const std::vector<std::string>& resourceInfo, const std::string& resourceName);
 
 template Texture* Resources::getResource(const std::string& resourceName);
 template ShaderProgram* Resources::getResource(const std::string& resourceName);

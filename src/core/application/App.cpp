@@ -10,6 +10,7 @@
 #include "App.h"
 #include "scenes/StencilScene.h"
 #include "scenes/RayTraceScene.h"
+#include "scenes/AABBScene.h"
 
 App::App() {}
 
@@ -44,7 +45,7 @@ void App::initialize() {
         io.IniFilename = nullptr;
 
         // Setup Platform/Renderer backends
-        if (!ImGui_ImplGlfw_InitForOpenGL(mpWindow_->getGLFWWindow(), true)) { // TODO CHECK PLATFORM
+        if (!ImGui_ImplGlfw_InitForOpenGL(mpWindow_->getGLFWWindow(), true)) {
             std::cout << "ImGui_ImplGlfw_InitForOpenGL failed" << std::endl;
             throw std::runtime_error("ImGui_ImplGlfw_InitForOpenGL error");
         }
@@ -56,6 +57,8 @@ void App::initialize() {
 
     mScenes_.emplace_back(std::make_unique<StencilScene>(*this));
     mScenes_.emplace_back(std::make_unique<RayTraceScene>(*this));
+    mScenes_.emplace_back(std::make_unique<AABBScene>(*this));
+
     mCurrentSceneIdx_ = 0;
 }
 
@@ -91,7 +94,6 @@ void App::update() {
                 glfwSetWindowShouldClose(mpWindow_->getGLFWWindow(), true);        
             }
         }
-
     }
 
     // Propagate mouse events to scenes
@@ -106,7 +108,7 @@ void App::update() {
         }
     }
 
-    mScenes_[mCurrentSceneIdx_]->update(dt.count());    
+    mScenes_[mCurrentSceneIdx_]->update(dt.count());
 }
 
 void App::render() {
@@ -117,7 +119,6 @@ void App::render() {
 }
 
 bool App::isRunning() const {
-    // TODO more running conditions. For now running is when the window is open
     return mpWindow_->isRunning();
 }
 
@@ -142,44 +143,52 @@ void App::setAntiAliasing(unsigned int sampleSize) {
 
 void App::loadResources() {
     mResources_.loadResource<ShaderProgram>(
-        {{ std::string(RESOURCE_PATH) + "/Shaders/compute_shader.glsl",ShaderProgram::ShaderCreateInfo::Type::COMPUTE}},
+        {{ std::string(RESOURCE_PATH) + "/Shaders/compute_shader.glsl:COMPUTE"}},
         "BasicCompute"
     );
 
     mResources_.loadResource<ShaderProgram>(
-        {{ std::string(RESOURCE_PATH) + "/Shaders/ray_trace.glsl",ShaderProgram::ShaderCreateInfo::Type::COMPUTE}},
+        {{ std::string(RESOURCE_PATH) + "/Shaders/ray_trace.glsl:COMPUTE"}},
         "RayTrace"
     );
 
     mResources_.loadResource<ShaderProgram>(
         {
-            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_testing.vs", ShaderProgram::ShaderCreateInfo::Type::VERTEX},
-            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_testing.fs", ShaderProgram::ShaderCreateInfo::Type::FRAGMENT}
+            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_testing.vs:VERTEX"},
+            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_testing.fs:FRAGMENT"}
         },
         "StencilShader"
     );
 
     mResources_.loadResource<ShaderProgram>(
         {
-            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_testing.vs", ShaderProgram::ShaderCreateInfo::Type::VERTEX},
-            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_single_color.fs", ShaderProgram::ShaderCreateInfo::Type::FRAGMENT}
+            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_testing.vs:VERTEX"},
+            { std::string(RESOURCE_PATH) + "/Shaders/2.stencil_single_color.fs:FRAGMENT"}
         },
         "StencilShaderSingleColor"
     );
 
     mResources_.loadResource<ShaderProgram>(
         {
-            { std::string(RESOURCE_PATH) + "/Shaders/quad.vs", ShaderProgram::ShaderCreateInfo::Type::VERTEX},
-            { std::string(RESOURCE_PATH) + "/Shaders/quad.fs", ShaderProgram::ShaderCreateInfo::Type::FRAGMENT}
+            { std::string(RESOURCE_PATH) + "/Shaders/quad.vs:VERTEX"},
+            { std::string(RESOURCE_PATH) + "/Shaders/quad.fs:FRAGMENT"}
         },
         "Quad"
     );
 
+    mResources_.loadResource<ShaderProgram>(
+        {
+            { std::string(RESOURCE_PATH) + "/Shaders/AABB.vs:VERTEX"},
+            { std::string(RESOURCE_PATH) + "/Shaders/AABB.fs:FRAGMENT"}
+        },
+        "AABBShader"
+    );
+
     mResources_.loadResource<Texture>({{ std::string(RESOURCE_PATH) + "/Textures/marble.jpg"}}, "Cube");
-    mResources_.loadResource<Texture>({{  std::string(RESOURCE_PATH) + "/Textures/metal.png"}}, "Floor");
+    mResources_.loadResource<Texture>({{ std::string(RESOURCE_PATH) + "/Textures/metal.png"}}, "Floor");
 
     mResources_.loadResource<ShaderProgram>(
-        {{ std::string(RESOURCE_PATH) + "/Shaders/ray_trace_multi.glsl",ShaderProgram::ShaderCreateInfo::Type::COMPUTE}},
+        {{ std::string(RESOURCE_PATH) + "/Shaders/ray_trace_multi.glsl:COMPUTE"}},
         "RayTraceMulti"
     );
 }

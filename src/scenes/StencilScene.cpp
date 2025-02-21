@@ -9,11 +9,6 @@
 #include "core/application/App.h"
 
 
-namespace {
-    static const unsigned int SCR_WIDTH = 800;
-    static const unsigned int SCR_HEIGHT = 800;
-}
-
 StencilScene::StencilScene(App& parentApp)
 : Scene(parentApp) {
     mpStencilShader_ = mParentApp_.getResources().getResource<ShaderProgram>("StencilShader");
@@ -189,16 +184,21 @@ void StencilScene::render() {
 
 void StencilScene::renderUI() {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame(); // TODO check platform
+    ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(250, 480), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
         ImGui::Begin("Menu", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
         
         ImGui::Text("Stencil Scene");
         ImGui::Text("FPS: %.1f", double(ImGui::GetIO().Framerate));
+
+        ImGui::Separator();
+        ImGui::Text("Move camera with WASD, arrow, space, shift keys");
+        ImGui::Text("Switch scenes with Tab key");
+        ImGui::Separator();
 
         const auto cameraPos = mCamera_.getPosition();
         const auto cameraForward = mCamera_.getForward();
@@ -214,7 +214,7 @@ void StencilScene::renderUI() {
     }
 
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // TODO check platform
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void StencilScene::update(const float dt) {

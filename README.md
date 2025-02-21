@@ -1,4 +1,6 @@
-Introduction to ray tracing with OpenGL with Compute Shaders. Use tab key to swap scenes
+Introduction to ray tracing with OpenGL with Compute Shaders. Use tab key to swap scenes.
+
+Also includes other demo scenes to experiment with different rendering techniques
 
 # Instructions
 
@@ -20,4 +22,17 @@ Third party libraries must be added a ./thirdparty folder (or update the CMake t
     - `./build/Debug/OpenGLTutorial.exe`
 
 
+# Ray Trace Scene
+Ray tracing using Compute Shaders
+
 ![alt text](./screenshots/RayTrace1.png)
+
+# Stencil Scene
+Highlight objects with Stencil Shader
+
+![alt text](./screenshots/Stencil.PNG)
+
+# AABB Visualize Scene
+Visualize a collection of AABBs (Axis Aligned Bounding Box)
+
+![alt text](./screenshots/AABB.PNG)

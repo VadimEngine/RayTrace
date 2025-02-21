@@ -66,7 +66,7 @@ void main() {
     // Compute ray direction using precomputed inverse view matrix
     vec3 rayDir = normalize((invViewMatrix * viewSpacePos).xyz - rayOrigin);
 
-    const int maxBounces = 2; // Number of reflections allowed
+    const int maxBounces = 8; // Number of reflections allowed
     vec3 accumulatedColor = vec3(0.0);
     vec3 currentAttenuation = vec3(1.0); // How much color carries through reflections
 

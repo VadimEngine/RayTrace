@@ -11,13 +11,8 @@
 #include "core/application/App.h"
 
 
-namespace {
-    static const unsigned int SCR_WIDTH = 800;
-    static const unsigned int SCR_HEIGHT = 800;
-}
-
 RayTraceScene::RayTraceScene(App& parentApp) 
-    : Scene(parentApp) {
+    : Scene(parentApp), mScreenSize_(mParentApp_.getWindow()->getDimensions()) {
 
     mpBasicCompute_ = mParentApp_.getResources().getResource<ShaderProgram>("BasicCompute");
     mpRayTraceCompute_ = mParentApp_.getResources().getResource<ShaderProgram>("RayTraceMulti");
@@ -88,9 +83,9 @@ RayTraceScene::RayTraceScene(App& parentApp)
 
         // Define a list of spheres
         std::vector<Sphere> spheres = {
-            {{ 0.0f,  0.0f,  0.0f}, 1.0f, {1.0f, 0.2f, 0.2f}, 0.5f},  // Red, 50% reflective
+            {{ 0.0f,  0.0f,  -5.0f}, 1.0f, {1.0f, 0.2f, 0.2f}, 0.5f},  // Red, 50% reflective
             {{5.5f,  1.5f,  8.0f}, 0.7f, {0.2f, 1.0f, 0.2f}, 0.2f},  // Green, 20% reflective
-            {{ 1.5f,  1.5f,  10.5f}, 1.2f, {0.2f, 0.2f, 1.0f}, 0.7f}   // Blue, 70% reflective
+            {{ 1.5f,  1.5f,  7.5f}, 1.2f, {0.2f, 0.2f, 1.0f}, 0.7f}   // Blue, 70% reflective
         };
 
         GLuint ssbo;
@@ -107,7 +102,7 @@ RayTraceScene::RayTraceScene(App& parentApp)
     // Create the texture (2D texture for color attachment)
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, mScreenSize_.x, mScreenSize_.y, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texture, 0);
@@ -133,7 +128,7 @@ void RayTraceScene::render() {
     mpRayTraceCompute_->setMat4("invProjMatrix", glm::inverse(projection));
     mpRayTraceCompute_->setMat4("invViewMatrix", glm::inverse(view));
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    glDispatchCompute((SCR_WIDTH + 15) / 16, (SCR_HEIGHT + 15) / 16, 1);
+    glDispatchCompute((mScreenSize_.x + 15) / 16, (mScreenSize_.y + 15) / 16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);  // Ensure updates are visible
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -155,11 +150,16 @@ void RayTraceScene::renderUI() {
     ImGui::NewFrame();
     {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(250, 480), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
         ImGui::Begin("Menu", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::Text("RayTrace Scene");
         ImGui::Text("FPS: %.1f", double(ImGui::GetIO().Framerate));
+
+        ImGui::Separator();
+        ImGui::Text("Move camera with WASD, arrow, space, shift keys");
+        ImGui::Text("Switch scenes with Tab key");
+        ImGui::Separator();
 
         const auto cameraPos = mCamera_.getPosition();
         const auto cameraForward = mCamera_.getForward();
@@ -199,7 +199,6 @@ void RayTraceScene::update(const float dt) {
    if (inputHandler.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
        mCamera_.move({0,1,0}, -mCamera_.getMoveSpeed() * dt);
    }
-   // Rotate TODO FIX THIS ROLL does not work and there seems to be a gimbal lock
    if (inputHandler.isKeyPressed(GLFW_KEY_LEFT)) {
        mCamera_.rotate(mCamera_.getUp(), mCamera_.getRotationSpeed() * dt);
    }

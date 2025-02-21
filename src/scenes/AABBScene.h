@@ -1,3 +1,4 @@
+
 #pragma once
 // third party
 #include <glm/glm.hpp>
@@ -7,9 +8,19 @@
 #include "core/application/Resources.h"
 #include "core/graphics/Camera.h"
 
-class StencilScene : public Scene {
+class AABBScene : public Scene {
 public:
-    StencilScene(App& parentApp);
+
+    enum class RenderMode {
+        LINES, SOLID
+    };
+
+    struct AABB {
+        float min[3];
+        float max[3];
+    };
+
+    AABBScene(App& parentApp);
 
     void render() override;
 
@@ -28,17 +39,18 @@ public:
     void onMouseWheel(const MouseEvent& mouseEvent) override;
 
 private:
-    ShaderProgram* mpStencilShader_ = nullptr;
+    ShaderProgram* mAABBShader_ = nullptr;
     
-    ShaderProgram* mpStencilShaderSingleColor_ = nullptr;
-
-    Texture* mpFloorTexture = nullptr;
-
-    Texture* mpCubeTexture = nullptr;
-
     Camera mCamera_;
 
-    unsigned int planeVAO, planeVBO;
+    unsigned int cubeLineVAO, cubeLineVBO;
 
-    unsigned int cubeVAO, cubeVBO;
+    unsigned int cubeSolidVAO, cubeSolidVBO;
+
+
+    std::vector<AABB> mAABBList_;
+
+    GLuint mAABBSSBO_;
+
+    RenderMode mRenderMode_ = RenderMode::LINES;
 };
